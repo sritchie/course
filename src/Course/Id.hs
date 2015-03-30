@@ -3,7 +3,8 @@
 
 module Course.Id where
 
-import Course.Core
+import           Control.Monad
+import           Course.Core
 import qualified Prelude as P
 
 data Id a = Id a deriving (Eq, Show)

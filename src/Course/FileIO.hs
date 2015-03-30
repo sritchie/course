@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE TupleSections #-}
 
 module Course.FileIO where
 
@@ -60,43 +61,32 @@ the contents of c
 -}
 
 -- /Tip:/ use @getArgs@ and @run@
-main ::
-  IO ()
-main =
-  error "todo"
+main :: IO ()
+main = error "todo"
 
-type FilePath =
-  Chars
+-- Modification to allow me to run this from the shared repl.
+baseDir :: Chars
+baseDir = "./share/"
+
+type FilePath = Chars
 
 -- /Tip:/ Use @getFiles@ and @printFiles@.
-run ::
-  Chars
-  -> IO ()
-run =
-  error "todo"
+run :: Chars -> IO ()
+run x = do
+  content <- readFile (baseDir ++ x)
+  files   <- getFiles (lines content)
+  printFiles files
 
-getFiles ::
-  List FilePath
-  -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo"
+getFiles :: List FilePath -> IO (List (FilePath, Chars))
+getFiles = sequence . (getFile <$>)
 
-getFile ::
-  FilePath
-  -> IO (FilePath, Chars)
-getFile =
-  error "todo"
+getFile :: FilePath -> IO (FilePath, Chars)
+getFile fp = (fp,) <$> readFile (baseDir ++ fp)
 
-printFiles ::
-  List (FilePath, Chars)
-  -> IO ()
-printFiles =
-  error "todo"
+printFiles :: List (FilePath, Chars) -> IO ()
+printFiles = void . sequence . (<$>) (uncurry printFile)
 
-printFile ::
-  FilePath
-  -> Chars
-  -> IO ()
-printFile =
-  error "todo"
-
+printFile :: FilePath -> Chars -> IO ()
+printFile path contents =
+  putStrLn ("!===========" ++ path)
+  <* putStrLn contents

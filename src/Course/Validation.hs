@@ -3,7 +3,7 @@
 
 module Course.Validation where
 
-import qualified Prelude as P(String)
+import qualified Prelude as P
 import Course.Core
 
 --  class Validation<A> {
@@ -102,3 +102,7 @@ errorOr (Value _) a = a
 
 valueValidation :: a -> Validation a
 valueValidation = Value
+
+instance P.Monad Validation where
+  (>>=) = flip bindValidation
+  return = Value
