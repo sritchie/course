@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Course.State where
@@ -23,34 +24,29 @@ import qualified Data.Set as S
 -- >>> import Course.List
 -- >>> instance Arbitrary a => Arbitrary (List a) where arbitrary = P.fmap listh arbitrary
 
--- A `State` is a function from a state value `s` to (a produced value `a`, and a resulting state `s`).
+-- A `State` is a function from a state value `s` to (a produced value
+-- `a`, and a resulting state `s`).
 newtype State s a =
-  State {
-    runState ::
-      s
-      -> (a, s)
-  }
+  State { runState :: s -> (a, s) }
 
 -- | Implement the `Functor` instance for `State s`.
 -- >>> runState ((+1) <$> pure 0) 0
 -- (1,0)
 instance Functor (State s) where
-  (<$>) =
-      error "todo"
+  (<$>) :: (a -> b) -> State s a -> State s b
+  f <$> State k = State (\s -> let (a, newS) = k s in (f a, newS))
 
 -- | Implement the `Apply` instance for `State s`.
 -- >>> runState (pure (+1) <*> pure 0) 0
 -- (1,0)
 instance Apply (State s) where
-  (<*>) =
-    error "todo"
+  (<*>) = error "todo!"
 
 -- | Implement the `Applicative` instance for `State s`.
 -- >>> runState (pure 2) 0
 -- (2,0)
 instance Applicative (State s) where
-  pure =
-    error "todo"
+  pure = State . (,)
 
 -- | Implement the `Bind` instance for `State s`.
 -- >>> runState ((const $ put 2) =<< put 1) 0
@@ -173,5 +169,4 @@ distinct =
 isHappy ::
   Integer
   -> Bool
-isHappy =
-  error "todo"
+isHappy = error "todo"
