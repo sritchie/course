@@ -19,19 +19,17 @@ import qualified Prelude as P
 
 -- | A `StateT` is a function from a state value `s` to a functor f of (a produced value `a`, and a resulting state `s`).
 newtype StateT s f a =
-  StateT {
-    runStateT ::
-      s
-      -> f (a, s)
-  }
+  StateT { runStateT :: s -> f (a, s) }
 
 -- | Implement the `Functor` instance for @StateT s f@ given a @Functor f@.
 --
 -- >>> runStateT ((+1) <$> (pure 2) :: StateT Int List Int) 0
 -- [(3,0)]
+--
+-- This bad boy's job is to use the functor to map the incoming
+-- function against the value piece of the StateT result.
 instance Functor f => Functor (StateT s f) where
-  (<$>) =
-    error "todo"
+  f <$> StateT k = StateT ((first f <$>) . k)
 
 -- | Implement the `Apply` instance for @StateT s f@ given a @Bind f@.
 --
@@ -42,8 +40,8 @@ instance Functor f => Functor (StateT s f) where
 -- >>> runStateT (StateT (\s -> Full ((+2), s P.++ [1])) <*> (StateT (\s -> Full (2, s P.++ [2])))) [0]
 -- Full (4,[0,1,2])
 instance Bind f => Apply (StateT s f) where
-  (<*>) =
-    error "todo"
+  StateT l <*> StateT r =
+    StateT (\s -> l s >>= (\(f, s') -> first f <$> r s'))
 
 -- | Implement the `Applicative` instance for @StateT s f@ given a @Applicative f@.
 --
@@ -268,16 +266,12 @@ log1 =
 -- If you see an even number, produce a log message, "even number: " followed by the even number.
 -- Other numbers produce no log message.
 --
--- /Tip:/ Use `filtering` and `StateT` over (`OptionalT` over `Logger` with a @Data.Set#Set@).
+-- /Tip:/ Use `filtering` and `StateT over (`OptionalT` over `Logger` with a @Data.Set#Set@).
 --
 -- >>> distinctG $ listh [1,2,3,2,6]
 -- Logger ["even number: 2","even number: 2","even number: 6"] (Full [1,2,3,6])
 --
 -- >>> distinctG $ listh [1,2,3,2,6,106]
 -- Logger ["even number: 2","even number: 2","even number: 6","aborting > 100: 106"] Empty
-distinctG ::
-  (Integral a, Show a) =>
-  List a
-  -> Logger Chars (Optional (List a))
-distinctG =
-  error "todo"
+distinctG :: (Integral a, Show a) => List a -> Logger Chars (Optional (List a))
+distinctG = error "todo"
