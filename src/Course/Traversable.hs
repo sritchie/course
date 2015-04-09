@@ -9,12 +9,7 @@ import Course.Applicative
 import Course.List
 
 class Functor t => Traversable t where
-  traverse ::
-    Applicative f =>
-    (a -> f b)
-    -> t a
-    -> f (t b)
+  traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
 
 instance Traversable List where
-  traverse f =
-    foldRight (\a b -> (:.) <$> f a <*> b) (pure Nil)
+  traverse f = foldRight (\a acc -> lift2 (:.) (f a) acc) (pure Nil)

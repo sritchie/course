@@ -239,4 +239,15 @@ log1 l = Logger (l :. Nil)
 -- >>> distinctG $ listh [1,2,3,2,6,106]
 -- Logger ["even number: 2","even number: 2","even number: 6","aborting > 100: 106"] Empty
 distinctG :: (Integral a, Show a) => List a -> Logger Chars (Optional (List a))
-distinctG = error "todo"
+distinctG xs =
+  let stringcat x y = fromString (x P.++ show y)
+      efn a = StateT
+              (OptionalT .
+               (\ret ->
+                 if a > 100
+                 then log1 (stringcat "aborting > 100: " a) Empty
+                 else (if even a
+                       then log1 (stringcat "even: " a)
+                       else pure) (Full ret)) .
+               (S.notMember a &&& S.insert a))
+  in runOptionalT (evalT (filtering efn xs) S.empty)
