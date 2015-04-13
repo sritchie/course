@@ -297,7 +297,7 @@ swapLeft (ListZipper (l:.ls) x rs) =
 -- >>> swapRight (zipper [3,2,1] 4 [])
 -- ><
 swapRight :: ListZipper a -> MaybeListZipper a
-swapRight (ListZipper Nil _ _) = IsNotZ
+swapRight (ListZipper _ _ Nil) = IsNotZ
 swapRight (ListZipper ls x (r :. rs)) =
   IsZ $ ListZipper ls r (x :. rs)
 
@@ -327,11 +327,15 @@ dropRights (ListZipper ls x _) = ListZipper ls x Nil
 
 -- Move the focus left the given number of positions. If the value is negative, move right instead.
 moveLeftN :: Int -> ListZipper a -> MaybeListZipper a
-moveLeftN = error "todo"
+moveLeftN x z | x == 0 = IsZ z
+moveLeftN x z | x < 0 = moveRightN (negate x) z
+moveLeftN x z = moveLeftN (pred x) -<< moveLeft z
 
 -- Move the focus right the given number of positions. If the value is negative, move left instead.
 moveRightN :: Int -> ListZipper a -> MaybeListZipper a
-moveRightN = error "todo"
+moveRightN x z | x == 0 = IsZ z
+moveRightN x z | x < 0 = moveLeftN (negate x) z
+moveRightN x z  = moveRightN (pred x) -<< moveRight z
 
 -- | Move the focus left the given number of positions. If the value is negative, move right instead.
 -- If the focus cannot be moved, the given number of times, return the value by which it can be moved instead.
@@ -376,12 +380,8 @@ moveLeftN' = error "todo"
 --
 -- >>> moveRightN' (-4) (zipper [3,2,1] 4 [5,6,7])
 -- Left 3
-moveRightN' ::
-  Int
-  -> ListZipper a
-  -> Either Int (ListZipper a)
-moveRightN' =
-  error "todo"
+moveRightN' :: Int -> ListZipper a -> Either Int (ListZipper a)
+moveRightN' = error "todo"
 
 -- | Move the focus to the given absolute position in the zipper. Traverse the zipper only to the extent required.
 --
@@ -393,12 +393,8 @@ moveRightN' =
 --
 -- >>> nth 8 (zipper [3,2,1] 4 [5,6,7])
 -- ><
-nth ::
-  Int
-  -> ListZipper a
-  -> MaybeListZipper a
-nth =
-  error "todo"
+nth :: Int -> ListZipper a -> MaybeListZipper a
+nth = error "todo"
 
 -- | Return the absolute position of the current focus in the zipper.
 --
