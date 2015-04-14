@@ -29,16 +29,13 @@ data ParseError =
   | Failed
   deriving Eq
 
-
 instance Show ParseError where
-  show UnexpectedEof =
-    "Unexpected end of stream"
+  show UnexpectedEof = "Unexpected end of stream"
   show (ExpectedEof i) =
     stringconcat ["Expected end of stream, but got >", show i, "<"]
   show (UnexpectedChar c) =
     stringconcat ["Unexpected character: ", show [c]]
-  show Failed =
-    "Parse failed"
+  show Failed = "Parse failed"
 
 data ParseResult a =
   ErrorResult ParseError
@@ -46,28 +43,20 @@ data ParseResult a =
   deriving Eq
 
 instance Show a => Show (ParseResult a) where
-  show (ErrorResult e) =
-    show e
-  show (Result i a) =
-    stringconcat ["Result >", hlist i, "< ", show a]
+  show (ErrorResult e) = show e
+  show (Result i a) = stringconcat ["Result >", hlist i, "< ", show a]
 
 -- Function to determine is a parse result is an error.
-isErrorResult ::
-  ParseResult a
-  -> Bool
-isErrorResult (ErrorResult _) =
-  True
-isErrorResult (Result _ _) =
-  False
+isErrorResult :: ParseResult a -> Bool
+isErrorResult (ErrorResult _) = True
+isErrorResult (Result _ _) = False
 
 data Parser a = P {
   parse :: Input -> ParseResult a
 }
 
 -- | Produces a parser that always fails with @UnexpectedChar@ using the given character.
-unexpectedCharParser ::
-  Char
-  -> Parser a
+unexpectedCharParser :: Char -> Parser a
 unexpectedCharParser c =
   P (\_ -> ErrorResult (UnexpectedChar c))
 
@@ -75,20 +64,15 @@ unexpectedCharParser c =
 --
 -- >>> parse (valueParser 3) "abc"
 -- Result >abc< 3
-valueParser ::
-  a
-  -> Parser a
-valueParser =
-  error "todo"
+valueParser :: a -> Parser a
+valueParser a = P (`Result` a)
 
 -- | Return a parser that always fails with the given error.
 --
 -- >>> isErrorResult (parse failed "abc")
 -- True
-failed ::
-  Parser a
-failed =
-  error "todo"
+failed :: Parser a
+failed = P $ const (ErrorResult Failed)
 
 -- | Return a parser that succeeds with a character off the input or fails with an error if the input is empty.
 --
@@ -97,10 +81,10 @@ failed =
 --
 -- >>> isErrorResult (parse character "")
 -- True
-character ::
-  Parser Char
-character =
-  error "todo"
+character :: Parser Char
+character = P (\i -> case i of
+                      (c:.cs) -> Result cs c
+                      Nil -> ErrorResult UnexpectedEof)
 
 -- | Return a parser that maps any succeeding result with the given function.
 --
@@ -109,21 +93,17 @@ character =
 --
 -- parse (mapParser (+10) (valueParser 7)) ""
 -- Result >< 17
-mapParser ::
-  (a -> b)
-  -> Parser a
-  -> Parser b
-mapParser =
-  error "todo"
+mapParser :: (a -> b) -> Parser a -> Parser b
+mapParser f (P p) =
+  P (\s ->
+      case p s of
+       Result i a -> Result i (f a)
+       ErrorResult e -> ErrorResult e)
 
 -- | This is @mapParser@ with the arguments flipped.
 -- It might be more helpful to use this function if you prefer this argument order.
-flmapParser ::
-  Parser a
-  -> (a -> b)
-  -> Parser b
-flmapParser =
-  flip mapParser
+flmapParser :: Parser a -> (a -> b) -> Parser b
+flmapParser = flip mapParser
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -146,21 +126,17 @@ flmapParser =
 --
 -- >>> isErrorResult (parse (bindParser (\c -> if c == 'x' then character else valueParser 'v') character) "x")
 -- True
-bindParser ::
-  (a -> Parser b)
-  -> Parser a
-  -> Parser b
-bindParser =
-  error "todo"
+bindParser :: (a -> Parser b) -> Parser a -> Parser b
+bindParser f p =
+  P (\s ->
+      case parse (mapParser f p) s of
+       Result i a -> parse a i
+       ErrorResult e -> ErrorResult e)
 
 -- | This is @bindParser@ with the arguments flipped.
 -- It might be more helpful to use this function if you prefer this argument order.
-flbindParser ::
-  Parser a
-  -> (a -> Parser b)
-  -> Parser b
-flbindParser =
-  flip bindParser
+flbindParser :: Parser a -> (a -> Parser b) -> Parser b
+flbindParser = flip bindParser
 
 -- | Return a parser that puts its input into the given parser and
 --
@@ -176,12 +152,8 @@ flbindParser =
 --
 -- >>> isErrorResult (parse (character >>> valueParser 'v') "")
 -- True
-(>>>) ::
-  Parser a
-  -> Parser b
-  -> Parser b
-(>>>) =
-  error "todo"
+(>>>) :: Parser a -> Parser b -> Parser b
+a >>> b = flbindParser a (const b)
 
 -- | Return a parser that tries the first parser for a successful value.
 --
@@ -200,12 +172,12 @@ flbindParser =
 --
 -- >>> parse (failed ||| valueParser 'v') "abc"
 -- Result >abc< 'v'
-(|||) ::
-  Parser a
-  -> Parser a
-  -> Parser a
-(|||) =
-  error "todo"
+(|||) :: Parser a -> Parser a -> Parser a
+P l ||| P r =
+  P (\input ->
+      case l input of
+       ErrorResult _ -> r input
+       result -> result)
 
 infixl 3 |||
 
