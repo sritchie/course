@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Course.Parser where
 
@@ -82,9 +83,9 @@ failed = P $ const (ErrorResult Failed)
 -- >>> isErrorResult (parse character "")
 -- True
 character :: Parser Char
-character = P (\i -> case i of
-                      (c:.cs) -> Result cs c
-                      Nil -> ErrorResult UnexpectedEof)
+character = P (\case
+                  (c:.cs) -> Result cs c
+                  Nil -> ErrorResult UnexpectedEof)
 
 -- | Return a parser that maps any succeeding result with the given function.
 --
